@@ -2,8 +2,19 @@
 name = "playground"
 version = "0.1.0"
 description = "Toy examples for motion control."
+authors = [
+    { name = "Amin Safavi", email = "safavi.m.amin@gmail.com" },
+]
 readme = "README.md"
 requires-python = ">=3.10"
 dependencies = [
-    "componentize-py>=0.19.3",
+    "sim",
+]
+
+[tool.uv.sources]
+sim = { workspace = true }
+
+[tool.uv.workspace]
+members = [
+    "sim",
 ]

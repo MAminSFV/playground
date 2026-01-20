@@ -50,7 +50,7 @@ If you prefer running commands manually without `just`:
 Compile the Python code into a WebAssembly Component (`physics.wasm`).
 
 ```bash
-cd python
+cd sim
 uv run componentize-py -d . -w engine componentize app -o ../webui/physics.wasm --stub-wasi
 cd ..
 ```
@@ -72,7 +72,7 @@ python3 -m http.server -d webui
 ## Project Structure
 
 *   `justfile`: Task runner configuration.
-*   `/python`: Contains the Python source code and WIT interface definitions.
+*   `/sim`: Contains the 2D simulator source code and WIT interface definitions.
     *   `app.py`: The physics engine implementation.
     *   `physics.wit`: The WebAssembly interface definition.
 *   `/webui`: The frontend dashboard.
