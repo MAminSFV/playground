@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kinematic Bicycle Model Simulation</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+        }
+    </script>
+    <style>
+        /* BASE (LIGHT) GRID */
+        .grid-bg {
+            background-color: #ffffff;
+            background-image:
+                linear-gradient(#e5e7eb 1px, transparent 1px),
+                linear-gradient(90deg, #e5e7eb 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: -1px -1px;
+            transition: background-color 0.3s ease;
+        }
+        /* LIGHT MAJOR GRID */
+        .grid-bg::after {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background-image:
+                linear-gradient(#d1d5db 1px, transparent 1px),
+                linear-gradient(90deg, #d1d5db 1px, transparent 1px);
+            background-size: 100px 100px;
+            pointer-events: none;
+            opacity: 1;
+        }
+
+        /* DARK MODE GRID OVERRIDES */
+        .dark .grid-bg {
+            background-color: #111827; /* gray-900 */
+            background-image:
+                linear-gradient(#374151 1px, transparent 1px), /* gray-700 */
+                linear-gradient(90deg, #374151 1px, transparent 1px);
+        }
+        .dark .grid-bg::after {
+            background-image:
+                linear-gradient(#4b5563 1px, transparent 1px), /* gray-600 */
+                linear-gradient(90deg, #4b5563 1px, transparent 1px);
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #c1c1c1; border-radius: 4px; }
+        .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+        ::-webkit-scrollbar-thumb:hover { background: #a8a8a8; }
+    </style>
+</head>
+<body class="h-screen w-screen overflow-hidden flex text-gray-700 dark:text-gray-300 font-sans antialiased bg-white dark:bg-gray-900 transition-colors duration-300">
+
+    <main class="flex-1 relative grid-bg overflow-hidden cursor-crosshair">
+
+        <div id="hud" class="absolute top-0 left-0 p-2 text-xs font-mono text-gray-800 dark:text-gray-200 z-10 select-none bg-white/50 dark:bg-black/50 backdrop-blur-sm rounded-br">
+            Initializing WASM Physics via Component...
+        </div>
+
+        <svg class="absolute inset-0 w-full h-full pointer-events-none z-0">
+            <path d="M 400 600 L 500 600 L 500 450 L 650 450 L 650 600 L 800 600 L 800 450 L 950 450 L 950 600 L 1100 600 L 1100 450 L 1200 450"
+                  fill="none" stroke="purple" stroke-width="1.5" class="opacity-80" />
+            <path d="M 350 600 Q 450 600 480 500 L 490 470"
+                  fill="none" stroke="green" stroke-width="1.5" class="opacity-90" />
+        </svg>
+
+        <div id="car" class="absolute w-6 h-10 bg-blue-800 border border-black dark:border-white z-10 shadow-lg"
+             style="top: 50%; left: 50%; transform: translate(-50%, -50%);">
+            <div class="absolute top-0 left-1/2 w-0.5 h-8 bg-orange-500 origin-bottom"
+                 style="transform: translateX(-50%) rotate(0deg) translateY(-80%);">
+                <div class="w-1.5 h-1.5 bg-red-600 rounded-full absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"></div>
+            </div>
+             <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-blue-900"></div>
+        </div>
+
+        <div class="absolute bottom-4 left-4 text-xs dark:text-gray-400">
+            Use <b>WASD</b> to apply force.
+        </div>
+    </main>
+
+    <aside class="w-80 bg-gray-50 dark:bg-gray-900 border-l border-gray-300 dark:border-gray-700 flex flex-col h-full overflow-y-auto transition-colors duration-300">
+
+        <div class="flex justify-between items-center p-4 border-b border-gray-200 dark:border-gray-800">
+            <h2 class="font-bold text-gray-800 dark:text-gray-100">Settings</h2>
+            <button id="theme-toggle" class="p-1.5 rounded-md bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition text-gray-700 dark:text-gray-200">
+                <svg id="sun-icon" class="w-4 h-4 hidden dark:block" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moon-icon" class="w-4 h-4 block dark:hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-4">
+
+            <div class="bg-white dark:bg-gray-800 p-3 rounded border border-gray-200 dark:border-gray-700 shadow-sm transition-colors">
+                <h3 class="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase mb-2">Model</h3>
+                <div class="space-y-1">
+                    <label class="flex items-center space-x-2 cursor-pointer">
+                        <input type="radio" name="model" class="text-blue-600 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600" checked>
+                        <span>Python WASM Component</span>
+                    </label>
+                </div>
+                <p class="text-xs text-gray-500 mt-2">
+                    Running physics from Python (componentized via uv/jco).
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    <script type="module">
+        // --- Dark Mode Logic ---
+        const btn = document.getElementById("theme-toggle");
+        const html = document.documentElement;
+
+        if (localStorage.theme === "dark" || (!("theme" in localStorage) && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
+            html.classList.add("dark");
+        } else {
+            html.classList.remove("dark");
+        }
+
+        btn.addEventListener("click", () => {
+            if (html.classList.contains("dark")) {
+                html.classList.remove("dark");
+                localStorage.theme = "light";
+            } else {
+                html.classList.add("dark");
+                localStorage.theme = "dark";
+            }
+        });
+
+        // --- WASM Physics Engine (Generated by jco) ---
+        import { update, getX, getY } from "./dist/physics.js";
+
+        let lastTime = 0;
+
+        // Input state (WASD)
+        const input = { x: 0, y: 0 };
+        const keys = {};
+
+        window.addEventListener("keydown", e => {
+            keys[e.key] = true;
+            updateInput();
+        });
+        window.addEventListener("keyup", e => {
+            keys[e.key] = false;
+            updateInput();
+        });
+
+        function updateInput() {
+            input.x = 0;
+            input.y = 0;
+            if (keys["w"]) input.y -= 1;
+            if (keys["s"]) input.y += 1;
+            if (keys["a"]) input.x -= 1;
+            if (keys["d"]) input.x += 1;
+        }
+
+        const hud = document.getElementById("hud");
+        hud.innerText = "Physics Running (Python WASM Component)";
+
+        function loop(timestamp) {
+            if (!lastTime) lastTime = timestamp;
+            const dt = Math.min((timestamp - lastTime) / 1000, 0.1);
+            lastTime = timestamp;
+
+            const FORCE = 1000;
+
+            // Call Python WASM update function
+            update(input.x * FORCE, input.y * FORCE, dt);
+
+            // Read state
+            const x = getX();
+            const y = getY();
+
+            // Update DOM
+            const car = document.getElementById("car");
+
+            const centerX = window.innerWidth / 2;
+            const centerY = window.innerHeight / 2;
+
+            car.style.left = (centerX + x) + "px";
+            car.style.top = (centerY + y) + "px";
+
+            const rot = input.x * 20;
+            car.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+
+            hud.innerText = `Physics(Python->WASM): x=${x.toFixed(1)}, y=${y.toFixed(1)} | Input: ${input.x}, ${input.y}`;
+
+            requestAnimationFrame(loop);
+        }
+
+        requestAnimationFrame(loop);
+    </script>
+</body>
+</html>

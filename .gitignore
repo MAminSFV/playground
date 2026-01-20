@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.venv/
+.env
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Project Specific (Generated Artifacts)
+webui/dist/
+webui/build/
+
+# Componentize-py Generated Implementations
+python/generated/

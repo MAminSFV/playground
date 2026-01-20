@@ -1,0 +1,9 @@
+package local:physics;
+
+world engine {
+    export update: func(ax: f32, ay: f32, dt: f32);
+    export get-x: func() -> f32;
+    export get-y: func() -> f32;
+    export get-vx: func() -> f32;
+    export get-vy: func() -> f32;
+}
