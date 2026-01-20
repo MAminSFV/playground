@@ -1,5 +1,5 @@
 # Motion Control Playground
-TODO(Amin) Add more.
+TODO(Amin): Under development, developing in the public.
 
 ## Prerequisites
 
