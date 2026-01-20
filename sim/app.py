@@ -34,3 +34,9 @@ class WitWorld(_wit_world.WitWorld):
 
     def get_vy(self) -> float:
         return state["vy"]
+
+    def reset(self) -> None:
+        state["x"] = 0.0
+        state["y"] = 0.0
+        state["vx"] = 0.0
+        state["vy"] = 0.0

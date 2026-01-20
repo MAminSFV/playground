@@ -6,4 +6,5 @@ world engine {
     export get-y: func() -> f32;
     export get-vx: func() -> f32;
     export get-vy: func() -> f32;
+    export reset: func();
 }
