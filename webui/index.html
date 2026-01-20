@@ -70,6 +70,9 @@
                 <div class="w-1.5 h-1.5 bg-red-600 rounded-full absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2"></div>
             </div>
              <div class="absolute -top-3 left-1/2 -translate-x-1/2 w-0 h-0 border-l-[4px] border-l-transparent border-r-[4px] border-r-transparent border-b-[8px] border-b-blue-900"></div>
+             <!-- Unit vector visualization -->
+             <div id="force-vector" class="absolute bg-green-400 z-50 origin-left shadow-md pointer-events-none"
+                  style="top: 50%; left: 50%; height: 4px; width: 0px; border-radius: 2px; display: none; transform: translateY(-50%);"></div>
         </div>
 
         <div class="absolute bottom-4 left-4 text-xs dark:text-gray-400">
@@ -178,8 +181,18 @@
             car.style.left = (centerX + x) + "px";
             car.style.top = (centerY + y) + "px";
 
-            const rot = input.x * 20;
-            car.style.transform = `translate(-50%, -50%) rotate(${rot}deg)`;
+            car.style.transform = `translate(-50%, -50%)`;
+
+            const vector = document.getElementById("force-vector");
+            if (input.x !== 0 || input.y !== 0) {
+                const angle = Math.atan2(input.y, input.x) * (180 / Math.PI);
+                vector.style.width = "40px";
+                vector.style.marginTop = "-2px";
+                vector.style.transform = `rotate(${angle}deg)`;
+                vector.style.display = "block";
+            } else {
+                vector.style.display = "none";
+            }
 
             hud.innerText = `Physics(Python->WASM): x=${x.toFixed(1)}, y=${y.toFixed(1)} | Input: ${input.x}, ${input.y}`;
 
