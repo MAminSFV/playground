@@ -44,7 +44,7 @@ jobs:
         run: just setup
 
       - name: Build and Transpile
-        run: just
+        run: just build transpile
 
       - name: Setup Pages
         uses: actions/configure-pages@v5
